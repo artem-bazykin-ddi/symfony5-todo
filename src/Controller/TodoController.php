@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace App\Controller;
 
@@ -8,45 +8,30 @@ use App\Service\TodoService;
 use Nelmio\ApiDocBundle\Annotation\Model;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use OpenApi\Annotations as OA;
-use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\SerializerInterface;
 
 /**
- * Class TodoController
- * @package App\Controller
- * @Route("/api/todos")
+ * @Route("/api/todos", name="todos_")
  */
 class TodoController extends AbstractController
 {
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-    /**
-     * @var TodoService
-     */
-    private $todoService;
-
-    /**
-     * @var Serializer
-     */
-    private $serializer;
+    private LoggerInterface $logger;
+    private TodoService $todoService;
+    private SerializerInterface $serializer;
 
     public function __construct(LoggerInterface $logger, TodoService $todoService, SerializerInterface $serializer)
     {
-
         $this->logger = $logger;
         $this->todoService = $todoService;
         $this->serializer = $serializer;
     }
 
     /**
-     * @Route("/", methods={"GET"}, name="todos_get")
+     * @Route("/", methods={"GET"}, name="get_all")
      *
      * @OA\Response(
      *     response=200,
@@ -57,16 +42,14 @@ class TodoController extends AbstractController
      *         example={"id": 1, "title": "title", "description": "description", "isComplete": false}
      *     ),
      * )
-     *
-     * @return JsonResponse
      */
-    public function getTodos(): JsonResponse
+    public function getTodos(): Response
     {
         return $this->json($this->todoService->getTodos());
     }
 
     /**
-     * @Route("/{id}", methods={"GET"}, name="todo_get")
+     * @Route("/{id}", methods={"GET"}, name="get")
      *
      * @OA\Response(
      *     response=200,
@@ -79,11 +62,8 @@ class TodoController extends AbstractController
      * )
      *
      * @OA\Response(response=404, description="Todo not found")
-     *
-     * @param int $id
-     * @return JsonResponse
      */
-    public function getTodoById(int $id): JsonResponse
+    public function getTodoById(int $id): Response
     {
         try {
             $todo = $this->todoService->getTodoById($id);
@@ -96,7 +76,7 @@ class TodoController extends AbstractController
     }
 
     /**
-     * @Route("/", methods={"POST"}, name="todos_add")
+     * @Route("/", methods={"POST"}, name="add")
      *
      * @OA\RequestBody(
      *     required=true,
@@ -108,24 +88,19 @@ class TodoController extends AbstractController
      *         @OA\Property(property="isComplete", type="boolean", example=false)
      *     )
      * )
-     *
      * @OA\Response(response="201", description="Successful created")
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
-    public function createTodo(Request $request): JsonResponse
+    public function createTodo(Request $request): Response
     {
         /** @var Todo $todo */
         $todo = $this->serializer->deserialize($request->getContent(), Todo::class, 'json');
-
         $this->todoService->save($todo);
 
         return $this->json($todo, Response::HTTP_CREATED);
     }
 
     /**
-     * @Route("/{id}", methods={"PUT"}, name="todo_update")
+     * @Route("/{id}", methods={"PUT"}, name="update")
      *
      * @OA\RequestBody(
      *     description="Pass atleast one parametr to update it",
@@ -135,11 +110,8 @@ class TodoController extends AbstractController
      *         @OA\Property(property="isComplete", type="boolean", example=false)
      *     )
      * )
-     * @param Request $request
-     * @param int $id
-     * @return JsonResponse
      */
-    public function updateTodo(Request $request, int $id): JsonResponse
+    public function updateTodo(Request $request, int $id): Response
     {
         try {
             /** @var Todo $data */
@@ -154,25 +126,21 @@ class TodoController extends AbstractController
     }
 
     /**
-     * @Route("/{id}", methods={"DELETE"}, name="todo_delete")
+     * @Route("/{id}", methods={"DELETE"}, name="delete")
      *
      * @OA\Response(response=200, description="Todo is deleted")
-     * @OA\Response(response=404, description="Todo not found or has deleted")
-     *
-     * @param int $id
-     * @return JsonResponse
+     * @OA\Response(response=404, description="Todo not found or has been deleted")
      */
-    public function deleteTodoById(int $id): JsonResponse
+    public function deleteTodoById(int $id): Response
     {
+        $status = Response::HTTP_OK;
         try {
             $this->todoService->deleteTodoById($id);
         } catch (TodoNotFoundException $exception) {
             $this->logger->error($exception->getMessage());
-
-            return $this->json([], Response::HTTP_NOT_FOUND);
+            $status = Response::HTTP_NOT_FOUND;
         }
 
-        return $this->json([], Response::HTTP_OK);
+        return $this->json([], $status);
     }
-
 }

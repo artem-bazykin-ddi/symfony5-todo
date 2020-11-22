@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace App\Entity;
 
@@ -23,35 +23,32 @@ class Todo
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      *
-     * @var int
      * @OA\Property(description="Todo identifier")
      * @Groups({"show_todo", "list_todos"})
      */
-    private $id;
+    private int $id;
 
     /**
      * @ORM\Column(type="string", length=255)
      *
-     * @var string
      * @OA\Property(type="string", maxLength=255, description="Todo title")
      * @Groups({"show_todo", "list_todos"})
      */
-    private $title;
+    private string $title;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      *
-     * @var string
      * @OA\Property(type="string", maxLength=255, description="Todo description", nullable=true)
      * @Groups({"show_todo"})
      */
-    private $description;
+    private ?string $description = null;
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
      * @Groups({"show_todo", "list_todos"})
      */
-    private $isComplete;
+    private ?bool $isComplete;
 
     public function getId(): ?int
     {
@@ -63,11 +60,9 @@ class Todo
         return $this->title;
     }
 
-    public function setTitle(string $title): self
+    public function setTitle(string $title): void
     {
         $this->title = $title;
-
-        return $this;
     }
 
     public function getDescription(): ?string
@@ -75,11 +70,9 @@ class Todo
         return $this->description;
     }
 
-    public function setDescription(?string $description): self
+    public function setDescription(?string $description): void
     {
         $this->description = $description;
-
-        return $this;
     }
 
     public function getIsComplete(): ?bool
@@ -87,10 +80,8 @@ class Todo
         return $this->isComplete;
     }
 
-    public function setIsComplete(?bool $isComplete): self
+    public function setIsComplete(?bool $isComplete): void
     {
         $this->isComplete = $isComplete;
-
-        return $this;
     }
 }

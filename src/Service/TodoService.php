@@ -9,16 +9,10 @@ use App\Exception\Todo\TodoNotFoundException;
 use App\Repository\TodoRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
-final class TodoService
+class TodoService
 {
-    /**
-     * @var EntityManagerInterface
-     */
-    private $entityManager;
-    /**
-     * @var TodoRepository
-     */
-    private $todoRepository;
+    private EntityManagerInterface $entityManager;
+    private TodoRepository $todoRepository;
 
     public function __construct(EntityManagerInterface $entityManager, TodoRepository $todoRepository)
     {
@@ -26,18 +20,12 @@ final class TodoService
         $this->todoRepository = $todoRepository;
     }
 
-    /**
-     * @return array
-     */
     public function getTodos(): array
     {
         return $this->todoRepository->findAll();
     }
 
     /**
-     * @param int $id
-     * @return Todo
-     *
      * @throws TodoNotFoundException
      */
     public function getTodoById(int $id): Todo
@@ -51,8 +39,6 @@ final class TodoService
     }
 
     /**
-     * @param Todo $data
-     * @param int $id
      * @throws TodoNotFoundException
      */
     public function updateTodo(Todo $data, int $id): void
@@ -65,21 +51,15 @@ final class TodoService
         $this->save($todo);
     }
 
-    /**
-     * @param Todo $todo
-     * @return $this
-     */
-    public function save(Todo $todo): self
+    public function save(Todo $todo = null, bool $isPersist = true): void
     {
-        $this->entityManager->persist($todo);
+        if ($isPersist) {
+            $this->entityManager->persist($todo);
+        }
         $this->entityManager->flush();
-
-        return $this;
     }
 
     /**
-     * @param int $id
-     *
      * @throws TodoNotFoundException
      */
     public function deleteTodoById(int $id): void
@@ -87,6 +67,6 @@ final class TodoService
         $todo = $this->getTodoById($id);
 
         $this->entityManager->remove($todo);
-        $this->entityManager->flush();
+        $this->save(null, false);
     }
 }
