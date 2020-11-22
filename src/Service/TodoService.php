@@ -8,6 +8,7 @@ use App\Entity\Todo;
 use App\Exception\Todo\TodoNotFoundException;
 use App\Repository\TodoRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
 
 class TodoService
 {
@@ -20,9 +21,11 @@ class TodoService
         $this->todoRepository = $todoRepository;
     }
 
-    public function getTodos(): array
+    public function getTodos(Request $request): array
     {
-        return $this->todoRepository->findAll();
+        $limit = $request->query->get('pageSize');
+        $offset = $request->query->get('page');
+        return $this->todoRepository->findBy([], [], $limit, $offset);
     }
 
     /**

@@ -33,6 +33,16 @@ class TodoController extends AbstractController
     /**
      * @Route("/", methods={"GET"}, name="get_all")
      *
+     * @OA\Parameter(
+     *     name="pageSize",
+     *     in="query",
+     *     description="Number of todo per page"
+     * )
+     * @OA\Parameter(
+     *     name="page",
+     *     in="query",
+     *     description="Current page"
+     * )
      * @OA\Response(
      *     response=200,
      *     description="A list with todos",
@@ -43,13 +53,13 @@ class TodoController extends AbstractController
      *     ),
      * )
      */
-    public function getTodos(): Response
+    public function getTodos(Request $request): Response
     {
-        return $this->json($this->todoService->getTodos());
+        return $this->json($this->todoService->getTodos($request));
     }
 
     /**
-     * @Route("/{id}", methods={"GET"}, name="get")
+     * @Route("/{id}", methods={"GET"}, name="show")
      *
      * @OA\Response(
      *     response=200,
@@ -63,15 +73,8 @@ class TodoController extends AbstractController
      *
      * @OA\Response(response=404, description="Todo not found")
      */
-    public function getTodoById(int $id): Response
+    public function show(Todo $todo = null): Response
     {
-        try {
-            $todo = $this->todoService->getTodoById($id);
-        } catch (TodoNotFoundException $exception) {
-            $this->logger->error($exception->getMessage());
-
-            return $this->json([], Response::HTTP_NOT_FOUND);
-        }
         return $this->json($todo);
     }
 
@@ -89,6 +92,7 @@ class TodoController extends AbstractController
      *     )
      * )
      * @OA\Response(response="201", description="Successful created")
+     * @OA\Response(response="500", description="Missing required parametrs")
      */
     public function createTodo(Request $request): Response
     {
@@ -110,19 +114,22 @@ class TodoController extends AbstractController
      *         @OA\Property(property="isComplete", type="boolean", example=false)
      *     )
      * )
+     * @OA\Response(response="200", description="Successful updated")
+     * @OA\Response(response=404, description="Todo not found")
      */
     public function updateTodo(Request $request, int $id): Response
     {
+        $status = Response::HTTP_OK;
         try {
             /** @var Todo $data */
             $data = $this->serializer->deserialize($request->getContent(), Todo::class, 'json');
             $this->todoService->updateTodo($data, $id);
-
-            return $this->json([], Response::HTTP_OK);
-
         } catch (TodoNotFoundException $exception) {
-            return $this->json([], Response::HTTP_NOT_FOUND);
+            $this->logger->error($exception->getMessage());
+            $status = Response::HTTP_NOT_FOUND;
         }
+
+        return $this->json([], $status);
     }
 
     /**
