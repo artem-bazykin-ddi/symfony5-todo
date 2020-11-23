@@ -43,4 +43,10 @@ php bin/console server:start
 ### API doc
 
 You can check swagger on URL https://127.0.0.1:8000/api/doc
+
+### Running tests
+
+```bash
+./bin/phpunit
+```
  
