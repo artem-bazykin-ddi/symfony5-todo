@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Todo;
+use App\Exception\Todo\TodoInternalServerError;
 use App\Exception\Todo\TodoNotFoundException;
 use App\Service\TodoService;
 use Nelmio\ApiDocBundle\Annotation\Model;
@@ -92,15 +93,22 @@ class TodoController extends AbstractController
      *     )
      * )
      * @OA\Response(response="201", description="Successful created")
-     * @OA\Response(response="500", description="Missing required parametrs")
+     * @OA\Response(response="500", description="Internal server error")
      */
     public function createTodo(Request $request): Response
     {
-        /** @var Todo $todo */
-        $todo = $this->serializer->deserialize($request->getContent(), Todo::class, 'json');
-        $this->todoService->save($todo);
+        $status = Response::HTTP_CREATED;
+        try {
+            /** @var Todo $todo */
+            $todo = $this->serializer->deserialize($request->getContent(), Todo::class, 'json');
+            $this->todoService->save($todo);
+        } catch (TodoInternalServerError $exception) {
+            $this->logger->error($exception->getMessage());
+            $status = Response::HTTP_INTERNAL_SERVER_ERROR;
+            $todo = [];
+        }
 
-        return $this->json($todo, Response::HTTP_CREATED);
+        return $this->json($todo, $status);
     }
 
     /**

@@ -34,7 +34,7 @@ class Todo
      * @OA\Property(type="string", maxLength=255, description="Todo title")
      * @Groups({"show_todo", "list_todos"})
      */
-    private string $title;
+    private ?string $title = null;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
@@ -48,7 +48,7 @@ class Todo
      * @ORM\Column(type="boolean", nullable=true)
      * @Groups({"show_todo", "list_todos"})
      */
-    private ?bool $isComplete;
+    private ?bool $isComplete = null;
 
     public function getId(): ?int
     {

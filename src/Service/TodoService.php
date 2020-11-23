@@ -5,9 +5,11 @@ namespace App\Service;
 
 
 use App\Entity\Todo;
+use App\Exception\Todo\TodoInternalServerError;
 use App\Exception\Todo\TodoNotFoundException;
 use App\Repository\TodoRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Symfony\Component\HttpFoundation\Request;
 
 class TodoService
@@ -54,16 +56,23 @@ class TodoService
         $this->save($todo);
     }
 
+    /**
+     * @throws TodoInternalServerError
+     */
     public function save(Todo $todo = null, bool $isPersist = true): void
     {
-        if ($isPersist) {
-            $this->entityManager->persist($todo);
+        try {
+            if ($isPersist) {
+                $this->entityManager->persist($todo);
+            }
+            $this->entityManager->flush();
+        } catch (Exception $e) {
+            throw new TodoInternalServerError($e->getMessage());
         }
-        $this->entityManager->flush();
     }
 
     /**
-     * @throws TodoNotFoundException
+     * @throws TodoNotFoundException|TodoInternalServerError
      */
     public function deleteTodoById(int $id): void
     {
