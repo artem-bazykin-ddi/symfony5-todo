@@ -76,7 +76,11 @@ class TodoController extends AbstractController
      */
     public function show(Todo $todo = null): Response
     {
-        return $this->json($todo);
+        $status = Response::HTTP_OK;
+        if (empty($todo)) {
+            $status = Response::HTTP_NOT_FOUND;
+        }
+        return $this->json($todo, $status);
     }
 
     /**
