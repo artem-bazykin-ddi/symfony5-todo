@@ -10,7 +10,7 @@ use Nelmio\ApiDocBundle\Annotation\Model;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use OpenApi\Annotations as OA;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -54,7 +54,7 @@ class TodoController extends AbstractController
      *     ),
      * )
      */
-    public function getTodos(Request $request): Response
+    public function getTodos(Request $request): JsonResponse
     {
         return $this->json($this->todoService->getTodos($request));
     }
@@ -74,11 +74,11 @@ class TodoController extends AbstractController
      *
      * @OA\Response(response=404, description="Todo not found")
      */
-    public function show(Todo $todo = null): Response
+    public function show(Todo $todo = null): JsonResponse
     {
-        $status = Response::HTTP_OK;
+        $status = JsonResponse::HTTP_OK;
         if (empty($todo)) {
-            $status = Response::HTTP_NOT_FOUND;
+            $status = JsonResponse::HTTP_NOT_FOUND;
         }
         return $this->json($todo, $status);
     }
@@ -99,16 +99,16 @@ class TodoController extends AbstractController
      * @OA\Response(response="201", description="Successful created")
      * @OA\Response(response="500", description="Internal server error")
      */
-    public function createTodo(Request $request): Response
+    public function createTodo(Request $request): JsonResponse
     {
-        $status = Response::HTTP_CREATED;
+        $status = JsonResponse::HTTP_CREATED;
         try {
             /** @var Todo $todo */
             $todo = $this->serializer->deserialize($request->getContent(), Todo::class, 'json');
             $this->todoService->save($todo);
         } catch (TodoInternalServerError $exception) {
             $this->logger->error($exception->getMessage());
-            $status = Response::HTTP_INTERNAL_SERVER_ERROR;
+            $status = JsonResponse::HTTP_INTERNAL_SERVER_ERROR;
             $todo = [];
         }
 
@@ -129,16 +129,16 @@ class TodoController extends AbstractController
      * @OA\Response(response="200", description="Successful updated")
      * @OA\Response(response=404, description="Todo not found")
      */
-    public function updateTodo(Request $request, int $id): Response
+    public function updateTodo(Request $request, int $id): JsonResponse
     {
-        $status = Response::HTTP_OK;
+        $status = JsonResponse::HTTP_OK;
         try {
             /** @var Todo $data */
             $data = $this->serializer->deserialize($request->getContent(), Todo::class, 'json');
             $this->todoService->updateTodo($data, $id);
         } catch (TodoNotFoundException $exception) {
             $this->logger->error($exception->getMessage());
-            $status = Response::HTTP_NOT_FOUND;
+            $status = JsonResponse::HTTP_NOT_FOUND;
         }
 
         return $this->json([], $status);
@@ -150,14 +150,14 @@ class TodoController extends AbstractController
      * @OA\Response(response=200, description="Todo is deleted")
      * @OA\Response(response=404, description="Todo not found or has been deleted")
      */
-    public function deleteTodoById(int $id): Response
+    public function deleteTodoById(int $id): JsonResponse
     {
-        $status = Response::HTTP_OK;
+        $status = JsonResponse::HTTP_OK;
         try {
             $this->todoService->deleteTodoById($id);
         } catch (TodoNotFoundException $exception) {
             $this->logger->error($exception->getMessage());
-            $status = Response::HTTP_NOT_FOUND;
+            $status = JsonResponse::HTTP_NOT_FOUND;
         }
 
         return $this->json([], $status);

@@ -44,7 +44,7 @@ class TodoService
     }
 
     /**
-     * @throws TodoNotFoundException
+     * @throws TodoNotFoundException|TodoInternalServerError
      */
     public function updateTodo(Todo $data, int $id): void
     {
@@ -53,7 +53,7 @@ class TodoService
         $todo->setDescription($data->getDescription() ?? $todo->getDescription());
         $todo->setIsComplete($data->getIsComplete() ?? $todo->getIsComplete());
 
-        $this->save($todo);
+        $this->save($todo, false);
     }
 
     /**
